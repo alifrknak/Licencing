@@ -1,0 +1,66 @@
+﻿@page "/ValidateLicense"
+@using System.ComponentModel.DataAnnotations
+@using Application.Model
+@using Business.Services.LicenceGenerators
+
+@rendermode InteractiveServer
+@inject ILicenceGeneratorService LicenceGeneratorService
+
+<div class="container">
+    <h4 class="mb-3">Lisans Doğrula</h4>
+    <form enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="formFile" class="form-label">Lisans Yükle</label>
+            <input class="form-control" type="file" id="formFile">
+        </div>
+        <button @onclick="Validate" type="button" class="btn btn-primary">Doğrula</button>
+    </form>
+    <br />
+
+    @if (IsValid.HasValue)
+    {
+        @if (IsValid.Value)
+        {
+            <div class="alert alert-success" role="alert">
+                Lisans Geçerlidir.  Son Geçerlilik Tarihi: @ExpireDate
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-danger" role="alert">
+                Lisans GEÇERSİZDİR. <a href="/ManageLicense" class="alert-link">Yeni Lisans Satın Al</a>
+            </div>
+        }
+    }
+
+</div>
+
+@code {
+
+    public string LicenseToValidate { get; set; } = string.Empty;
+    public bool? IsValid { get; set; }
+
+    public DateTime ExpireDate { get; set; } 
+
+
+    private void Validate(MouseEventArgs args)
+    {
+        #if !DEBUG
+        
+        // Gerçek Lisans Doğrulamsı
+        bool isValid = LicenceGeneratorService.Validate(LicenseToValidate);
+        
+        #else
+        
+        IsValid = Random.Shared.Next(0,2) !=0;
+
+        #endif
+        base.StateHasChanged();
+    }
+
+    override protected void OnInitialized()
+    {
+        ExpireDate = DateTime.Now.AddDays(Random.Shared.Next(4,100)); 
+    }
+
+}

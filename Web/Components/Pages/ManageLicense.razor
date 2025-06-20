@@ -1,0 +1,131 @@
+﻿@page "/ManageLicense"
+@using System.ComponentModel.DataAnnotations
+@using Application.Model
+@rendermode InteractiveServer
+
+
+<div class="row">
+    <div class="col-lg-6">
+        <section>
+            <EditForm Model="createLicenseModel" method="post" OnValidSubmit="HandleCreate" FormName="createLicense">
+                <DataAnnotationsValidator />
+                <h2>Lisans Oluştur</h2>
+                <hr />
+                <ValidationSummary class="text-danger" role="alert" />
+
+                <div class="form-floating mb-3">
+                    <div class="mb-3">
+                        <label for="dropdown" class="form-label">Ürün Seç</label>
+                        <select id="dropdown" class="form-select" @bind="createLicenseModel.ProductId">
+                            @foreach (var option in ProductModels)
+                            {
+                                <option value="@option.Id">@option.ProductName</option>
+                            }
+                        </select>
+                    </div>
+                    <ValidationMessage For="() => createLicenseModel.ProductId" class="text-danger" />
+                </div>
+
+
+                <div class="form-floating mb-3">
+                    <div class="mb-3">
+                        <label for="dropdown1" class="form-label">Özellik Seç</label>
+                        <select id="dropdown1" class="form-select" @bind="createLicenseModel.FeatureId">
+                            @foreach (var option in FeatureModels)
+                            {
+                                <option value="@option.Id">@option.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <ValidationMessage For="() => createLicenseModel.ProductId" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="dateInput" class="form-label">Lisans bitiş süresi belirle</label>
+                    <input type="date" id="dateInput" class="form-control" @bind="createLicenseModel.ExpireDate" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="dropdown1" class="form-label">Lisans Tipi Seç</label>
+                    <select id="dropdown1" class="form-select" @bind="createLicenseModel.LicenseType">
+                        @foreach (var option in LicenseTypes)
+                        {
+                            <option value="@option.Item1">@option.Item2</option>
+                        }
+                    </select>
+                </div>
+
+                <div>
+                    <button type="submit" class="w-100 btn btn-lg btn-secondary">Fiyat Hesapla</button>
+                    <br />
+                    <br />
+                </div>
+            </EditForm>
+
+            @if(priceCalculated)
+            {
+                <div class="mb-3">
+                    <label for="dateInput" class="form-label">Lisans Fiyatı(TL- ₺)</label>
+                    <input type="text" disabled id="price" class="form-control" @bind="calculatedPrice" />
+                </div>
+
+                <div>
+                    <button type="button" class="w-100 btn btn-lg btn-primary">Satın Al</button>
+                </div>
+                <br />
+            }
+        </section>
+    </div>
+</div>
+
+
+@code {
+
+    [SupplyParameterFromForm]
+    public CreateLicenseModel createLicenseModel { get; set; } = new();
+    public IEnumerable<ProductModel> ProductModels { get; set; } = new List<ProductModel>();
+    public IEnumerable<FeatureModel> FeatureModels { get; set; } = new List<FeatureModel>();
+    public IEnumerable<(int, string)> LicenseTypes { get; set; } = new LinkedList<(int, string)>();
+
+    private bool priceCalculated = false;
+    private decimal calculatedPrice = 0.0m;
+    private decimal pricePerDay = 1521m; 
+
+
+    public void HandleCreate()
+    {
+        var totalDays = (createLicenseModel.ExpireDate - DateTime.Now).Days; // Calculate the difference in days
+        calculatedPrice = totalDays * pricePerDay;
+        priceCalculated = true; 
+        StateHasChanged(); 
+    }
+   
+
+    protected override void OnInitialized()
+    {
+        // add dummy products and features for demonstration
+        ProductModels = new List<ProductModel>
+        {
+            new ProductModel { Id = Guid.NewGuid(), ProductName = "E-imza" },
+            new ProductModel { Id = Guid.NewGuid(), ProductName = "E-Muhasebe" },
+            new ProductModel { Id = Guid.NewGuid(), ProductName = "Kargo Takip" },
+            new ProductModel { Id = Guid.NewGuid(), ProductName = "Ürün 4" },
+            new ProductModel { Id = Guid.NewGuid(), ProductName = "Ürün 5" },
+            new ProductModel { Id = Guid.NewGuid(), ProductName = "Ürün 6" },
+        };
+
+        FeatureModels = new List<FeatureModel>
+        {
+            new FeatureModel { Id = Guid.NewGuid(), Name = "Özellik 1" },
+            new FeatureModel { Id = Guid.NewGuid(), Name = "Özellik 2" },
+            new FeatureModel { Id = Guid.NewGuid(), Name = "Özellik 3" },
+            new FeatureModel { Id = Guid.NewGuid(), Name = "Özellik 4" },
+            new FeatureModel { Id = Guid.NewGuid(), Name = "Özellik 5" },
+        };
+
+        LicenseTypes = new List<(int,string)> { (1,"Deneme"), (2,"Standart") }; 
+    }
+}
+
+
+
